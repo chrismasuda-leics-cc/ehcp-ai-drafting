@@ -33,7 +33,7 @@ that a human reviews and finalises — the system is a drafting assistant, **not
 
 | Capability | Description |
 |---|---|
-| Multi-format ingest | DOCX and PDF advice documents, up to 200 MB per upload |
+| Multi-format ingest | DOCX and PDF advice documents |
 | Automatic document typing | File name heuristics plus content-marker scoring classify each upload as Personal / Education / Health / Social Care advice |
 | Structured extraction | Azure OpenAI extracts JSON that conforms to a per-section JSON schema |
 | LLM + rule-based validation | An LLM validator scores extraction accuracy; a deterministic quality checker re-checks fields and computes completeness over critical fields |
