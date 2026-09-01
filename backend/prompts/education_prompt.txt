@@ -1,0 +1,259 @@
+Extract structured information from the EHCP Education Advice document.
+
+Return ONLY valid JSON matching the schema.
+
+=============================
+CRITICAL: COMPLETENESS
+=============================
+
+The document contains these top-level sections. You MUST extract ALL of them:
+
+1. Pupil_Views
+2. Parent_Carer_Views
+3. Primary_area_of_need
+4. Cognition_and_Learning
+5. Communication_and_Interaction
+6. Social_Emotional_Mental_Health
+7. Sensory_and_Physical
+8. Advice_Giver
+
+Sections 4–7 each contain: Strengths, Needs, Long_Term_Outcomes, Medium_Term_Outcomes, Provision, By_Whom, Frequency, Met_Need.
+If data exists in the document for any of these, it MUST appear in the output. Do NOT return empty arrays when the document has content.
+
+=============================
+GENERAL RULES
+=============================
+
+• Use the exact schema keys. Do NOT create new keys.
+• If information is missing, return null or an empty array.
+• EMPTY / BLANK TEMPLATE DETECTION: If a field contains ONLY its heading label
+  or form placeholder (e.g. "Strengths" under a Strengths field, "Needs" under
+  a Needs field, "How I communicate" under How_I_communicate, etc.) with NO
+  actual child data, return null for that field. Column headers and section
+  headings are NOT data.
+• Preserve the original wording from the document.
+• Do NOT summarise, rewrite, or paraphrase.
+• Do NOT combine separate points into one string.
+• Remove bullet symbols (•, -, o) but keep the text.
+
+=============================
+SOURCE REFERENCE CLEANING
+=============================
+
+Remove source reference codes from the extracted text:
+
+Remove patterns like: (A), (PR), (TR), (P), (I), (LEPS), (A, PR), (PR, I), (A, PR, I, LEPS), (A, I, PR), (PR, TR), (P, TR) and all similar combinations of A, PR, TR, P, I, LEPS in parentheses.
+
+Remove appendix references: (Appendix 1), (Appendix 2), (Appendix 3)
+
+Do NOT remove descriptive parenthetical text such as:
+• (nausea) — symptom description, KEEP
+• (e.g. that require him to work through a sheet) — example, KEEP
+• (such as GCSEs) — clarification, KEEP
+• (in a group of around 20 children) — context, KEEP
+• (for Foundation Stage 2, 26.08.22) — context with date, KEEP
+• (person's name) — name clarification, KEEP
+• (https://...) or (http://...) — URL/hyperlink, ALWAYS KEEP
+• Any parenthetical text containing a URL must be preserved exactly as-is
+
+URLs and hyperlinks already appear inline in the document text in the format "display text (URL)".
+Preserve them exactly as they appear — do NOT remove, reformat, or duplicate URLs.
+
+Keep all dates (e.g. 26.08.22, 30.08.2022, March 2020, January 2023) in the text. Only remove the source code tags.
+
+After removing references, clean up double spaces and trailing spaces.
+
+Examples:
+
+BEFORE: "The child loves to read, and he finds this very fulfilling and enjoyable (PR, A)."
+AFTER:  "The child loves to read, and he finds this very fulfilling and enjoyable."
+
+BEFORE: "The child's anxiety can affect him physically (nausea) (A, PR, I, LEPS)."
+AFTER:  "The child's anxiety can affect him physically (nausea)."
+
+BEFORE: "The child also demonstrated strengths in his auditory short term and working memory during a forward and backwards digit recall task (A) (Appendix 2)."
+AFTER:  "The child also demonstrated strengths in his auditory short term and working memory during a forward and backwards digit recall task."
+
+=============================
+PARAGRAPH HANDLING
+=============================
+
+If a section contains normal paragraph text (NOT bullet points), return the entire paragraph as ONE unnumbered array element. Do NOT split paragraphs into separate elements and do NOT add numbering to paragraphs.
+
+IMPORTANT — Journey_so_far:
+The "Journey so far" section often contains multiple paragraphs of continuous prose separated by blank lines. Each paragraph may contain multiple sentences. Treat each PARAGRAPH (block of text between blank lines) as ONE array element. Do NOT split individual sentences into separate array items. Do NOT add number prefixes. For example, if the section has 4 paragraphs, the output should be an array with 4 unnumbered strings.
+
+=============================
+BULLET NUMBERING RULES
+=============================
+
+Apply numbering to bullet points and list items in the document. These rules apply uniformly across ALL sections — Pupil_Views, Parent_Carer_Views, Strengths, Needs, Outcomes, etc.
+
+IMPORTANT: The document text may come from Document Intelligence, which often STRIPS bullet markers (•, o, -) and indentation. You must use SEMANTIC understanding to detect the structure:
+- A line that ends with a colon (:) and is followed by shorter, related lines = parent with sub-items.
+- Lines that elaborate, list details, or give examples about the line directly above them = sub-items of that line.
+- Lines that introduce a completely new, independent topic = new main bullet.
+- An introductory sentence that just sets context before a list begins = unnumbered intro (not a bullet).
+
+How to number:
+- If a section begins with an introductory sentence before list items, return it as an unnumbered array element. Numbering starts at the first list item.
+- Each main/independent point gets the next sequential number: 1, 2, 3...
+- Sub-items underneath a parent get hierarchical numbering: parent.1, parent.2, parent.3...
+- Deeper nesting continues: parent.sub.1, parent.sub.2...
+- Numbering resets within each schema field.
+
+How to identify sub-items when bullet markers are stripped:
+- If a line ends with a colon (:), the lines that follow until the next independent topic are sub-items of that line.
+- If several short lines follow a longer explanatory line and they all relate to it, they are sub-items.
+- If a line could stand alone as an independent statement about a different topic, it is a new main item.
+
+CRITICAL FORMAT RULE:
+Each item and sub-item MUST be its own separate array element with its number prefix.
+NEVER merge a parent and its sub-items into one string using \n.
+This applies to ALL array fields: Strengths, Needs, Outcomes, Views — everything except Provision tables.
+
+Abstract patterns showing the correct output format (note: input may have NO bullet markers since Document Intelligence strips them):
+
+Input (plain text, markers stripped):
+First point about topic A.
+Second point about topic B:
+Detail about B part 1.
+Detail about B part 2.
+Detail about B part 3.
+Third point about topic C.
+
+Correct output — "Second point about topic B:" ends with colon, so the detail lines after it are sub-items:
+[
+  "1 First point about topic A.",
+  "2 Second point about topic B:",
+  "2.1 Detail about B part 1.",
+  "2.2 Detail about B part 2.",
+  "2.3 Detail about B part 3.",
+  "3 Third point about topic C."
+]
+
+WRONG — sub-items merged into parent with \n (NEVER do this):
+[
+  "2 Second point about topic B:\nDetail about B part 1.\nDetail about B part 2."
+]
+
+WRONG — sub-items have no number prefix (NEVER do this):
+[
+  "2 Second point about topic B:",
+  "Detail about B part 1.",
+  "Detail about B part 2."
+]
+
+WRONG — sub-items restart numbering at 1 instead of inheriting parent number:
+[
+  "2 Second point about topic B:",
+  "1 Detail about B part 1.",
+  "2 Detail about B part 2."
+]
+
+Input with deeper nesting (plain text):
+Top-level point:
+Sub-point with detail:
+Deeper detail item 1.
+Deeper detail item 2.
+
+Correct output:
+[
+  "5 Top-level point:",
+  "5.1 Sub-point with detail:",
+  "5.1.1 Deeper detail item 1.",
+  "5.1.2 Deeper detail item 2."
+]
+
+Input with introductory text before list items:
+Some introductory sentence explaining context.
+First item about X.
+Second item about Y.
+
+Correct output — intro is unnumbered, numbering starts at first list item:
+[
+  "Some introductory sentence explaining context.",
+  "1 First item about X.",
+  "2 Second item about Y."
+]
+
+=============================
+NEEDS SUB-HEADING HANDLING
+=============================
+
+The Needs section in each SEN category may contain sub-headings (e.g. "Attitude and Engagement with Learning", "Literacy skills", "Numeracy skills", "Emotional awareness and regulation", "Confidence & Self-esteem", "Relationships", "Risk awareness", "Possible sensory differences", "Fine motor skills").
+
+When sub-headings exist, return Needs as an object:
+• Key = sub-heading name with underscores (e.g. "Attitude_and_Engagement_with_Learning")
+• Value = array of numbered bullet points under that sub-heading
+• Numbering resets for each sub-heading group
+
+If no sub-headings exist, return Needs as a flat numbered array.
+
+=============================
+PROVISION TABLE HANDLING
+=============================
+
+The document has provision tables with columns: Special Educational Provision, By Whom, Frequency, Which Need Does This Provision Meet.
+
+Extract into parallel arrays: Provision, By_Whom, Frequency, Met_Need. Each row index must match across all four arrays.
+
+CRITICAL COLUMN ALIGNMENT RULES:
+- Read EACH ROW of the table independently. Every row has exactly 4 columns.
+- Column 1 = "Special Educational Provision" → Provision
+- Column 2 = "By Whom" → By_Whom
+- Column 3 = "Frequency" → Frequency
+- Column 4 = "Which Need Does This Provision Meet" → Met_Need
+- All four output arrays (Provision, By_Whom, Frequency, Met_Need) MUST have the SAME length.
+- Array index 0 = table row 1, index 1 = table row 2, etc. across ALL four arrays.
+
+EMPTY CELL HANDLING (CRITICAL):
+- If a table cell is EMPTY or BLANK, output null at that index. Do NOT skip it.
+- Do NOT shift values from subsequent rows to fill an empty cell.
+- Do NOT collapse rows by removing nulls — every row must be represented.
+- Example: If row 1 has By_Whom="Teacher" and row 2 has By_Whom="" (empty),
+  the By_Whom array must be ["Teacher", null, ...] — NOT ["Teacher", <row 3 value>, ...].
+
+NEVER DO THIS:
+- Moving a value from row N+1 into row N because row N's cell was empty.
+- Omitting a row because some of its cells are empty.
+- Having arrays of different lengths.
+
+If a cell spans multiple lines, keep all lines together as one value for that cell.
+
+Do NOT add numbering or bullet symbols to Provision, By_Whom, Frequency, or Met_Need values.
+Keep each cell's text as a plain paragraph. If a cell contains a heading followed by sub-items, join them into a single string using \n — but without any numbering or bullet prefixes.
+
+=============================
+ADVICE GIVER — MANDATORY EXTRACTION
+=============================
+
+The document is signed or authored by a professional. Their details typically appear at the very end of the document (last few lines), in a header/footer, or in a cover page.
+
+You MUST extract:
+• Name — the full name of the person who wrote or signed the advice (e.g. "Paul Dunn", "Dr Karen Bell", "Dr Leo Green", "Dr Karen Bell & Dr Leo Green"). Look for a person's name near keywords like "Name:", "Signed by:", "Written by:", "Report author:", "Advice given by:", or simply a standalone name at the end of the document. If multiple names appear together (e.g. joined by "&" or "and"), extract them exactly as written including the connector.
+• Role — their professional role or job title (e.g. "Trainee Educational Psychologist", "Educational Psychologist", "Specialist Teacher"). Look near keywords like "Role:", "Position:", "Designation:", or directly after the name.
+• Date — the date of the advice (preserve original format, e.g. "27.02.2025"). Look near keywords like "Date:", "Date of advice:", or near the signature block.
+
+CRITICAL RULES for Advice_Giver:
+- This field MUST NOT be null if a name, role, or date appears anywhere in the document's signature/author section.
+- Scan the ENTIRE document, especially the LAST 20 lines and any header/footer text, for the advice giver's details.
+- If you find a person's name at the end of the document that is clearly the author/signer, extract it even if there is no explicit "Name:" label.
+- If any of the three fields (Name, Role, Date) cannot be found, set that specific field to null — but extract whichever fields ARE present.
+
+=============================
+FINAL OUTPUT RULES
+=============================
+
+• Return ONLY valid JSON
+• No explanations, no markdown, no extra text
+• ALL sections with data in the document MUST be populated
+• Cognition_and_Learning, Communication_and_Interaction, Social_Emotional_Mental_Health, and Sensory_and_Physical MUST NOT be empty if the document contains data for them
+
+=============================
+Schema:
+{schema}
+
+=============================
+Document Text:
+{document_text}

@@ -1,0 +1,219 @@
+Extract structured information from the EHCP Social Care Advice document.
+
+Return ONLY valid JSON matching the schema.
+
+=============================
+CRITICAL: COMPLETENESS
+=============================
+
+You MUST extract ALL data from the document for every schema field.
+Do NOT skip, truncate, or summarise any content.
+Every line and paragraph that belongs to a schema field MUST appear in the output.
+
+=============================
+GENERAL RULES
+=============================
+
+- Use the exact schema keys. Do NOT create new keys.
+- If information is missing, return null.
+- Preserve the original wording from the document exactly as written.
+- EMPTY / BLANK TEMPLATE DETECTION: If a field contains ONLY its heading label
+  (e.g. "Strengths" under the Strengths field, "Needs" under the Needs field,
+  "Social Care Provision" under Provision, "Name of child or young person" under
+  Name, "By Whom" under By_Whom, etc.) with NO actual child data, return null
+  for that field. Column headers, row labels, and form placeholders are NOT data.
+- Do NOT summarise, rewrite, or paraphrase any text.
+- Do NOT combine separate items into one string unless they are a single paragraph.
+- Remove bullet symbols (•, -, o) but keep the text.
+- Keep all dates exactly as written in the document.
+
+=============================
+CHILD DETAILS
+=============================
+
+Extract all child details into the Child_Details object:
+- Name, Date_of_Birth, Address, Mosaic_ID, Status
+- These are typically found in a table at the top of the document.
+- Extract the FULL text for each field.
+
+=============================
+VIEWS
+=============================
+
+- Child_Views: Extract the child or young person's views text. If the document states there is no involvement, extract that statement.
+- Parent_Carer_Views: Extract the parent/carer views text. If the document states there is no involvement, extract that statement.
+
+CRITICAL SECTION BOUNDARY RULES FOR VIEWS:
+- The Views section is a TWO-COLUMN TABLE near the top of the document:
+  Left column = "Child or young person's views" → Child_Views
+  Right column = "Parent or carer's views" → Parent_Carer_Views
+- Use the STRUCTURED TABLE DATA supplement to identify the Views table (look for the table with column headers containing "Child or young person's views" and "Parent or carer's views").
+- Each column in that table row maps to exactly one field. Text in the LEFT column (before the | separator) = Child_Views. Text in the RIGHT column (after the | separator) = Parent_Carer_Views.
+- Child_Views must contain ONLY the text from the left/child column. Do NOT include parent/carer text in Child_Views.
+- ONLY include text that appears BEFORE the "Sections D" / "Strengths" / "Needs" heading.
+- Text that appears AFTER the H1 heading ("Social care provision which must be made...") belongs to the H1 provision table, NOT to Parent_Carer_Views — even if the wording is identical.
+- If the same sentence appears in BOTH the Views section AND the H1/H2 table, do NOT duplicate it into Parent_Carer_Views. Only extract it once from the Views section.
+- Count carefully: if the right column of the Views table has N paragraphs, Parent_Carer_Views should have exactly N entries.
+
+=============================
+SOCIAL CARE NEEDS
+=============================
+
+The document has a section titled "Sections D (Social care needs which relate to the SEN)".
+This section contains sub-headings: Strengths and Needs.
+
+CRITICAL MAPPING RULES:
+- Text under the "Strengths" sub-heading within Section D → Social_Care_Needs.Strengths
+- Text under the "Needs" sub-heading within Section D → Social_Care_Needs.Needs
+- Do NOT place Section D content into Strengths if it describes needs, lack of involvement, or inability to determine needs.
+- If the document states there is no social care involvement, that text belongs in Needs (not Strengths), because it describes the absence of identified needs.
+- Include ALL text under each sub-heading.
+- If multiple paragraphs exist, join them with newlines.
+- Do NOT skip any paragraph.
+
+=============================
+OUTCOMES
+=============================
+
+The Outcomes section is a TABLE with row labels on the left and outcome text on the right.
+
+- Long_Term_Outcomes: Extract ONLY the outcome text from the row labelled
+  "Long Term / Preparation for Adulthood Outcomes". Do NOT include the row
+  label itself — only the actual outcome content in the adjacent cell.
+- Medium_Term_Outcomes: Extract ONLY the outcome text from the row labelled
+  "Medium Term Outcomes". Do NOT include the row label itself — only the
+  actual outcome content in the adjacent cell.
+
+CRITICAL: The row labels ("Long Term / Preparation for Adulthood Outcomes",
+"Medium Term Outcomes") are TABLE HEADERS, not data. They must NOT appear
+in the extracted values. If the only text in a row is the label with no
+actual outcome content, return null for that field.
+
+=============================
+PROVISION TABLES (H1 and H2)
+=============================
+
+The document has two provision sections: H1 and H2.
+
+H1 = Social care provision secured under Section 2 of the Chronically Sick and Disabled Persons Act 1970.
+H2 = Any other social care provision reasonably required by the learning difficulties or disabilities which result in the child or young person having special educational needs.
+
+CRITICAL: H2 content MUST go into H2_Social_Care_Provision, NOT into Social_Care_Needs or H1.
+
+Each has a table with columns:
+- Social Care Provision → maps to "Provision"
+- By Whom → maps to "By_Whom"
+- Frequency → maps to "Frequency"
+- Which Need Does This Provision Meet → maps to "Met_Need"
+
+CRITICAL SECTION BOUNDARY RULES FOR H1/H2:
+- H1 Provision rows come ONLY from the table under the H1 heading.
+- H2 Provision rows come ONLY from the table under the H2 heading.
+- Do NOT include text from the Views section (which appears BEFORE "Sections D") in the H1 or H2 arrays.
+- If a Provision cell contains text like "we do not have parent or carer views", that IS a valid provision row if it appears inside the H1/H2 table — but it must NOT also be duplicated into Parent_Carer_Views.
+- Use the STRUCTURED TABLE DATA supplement to verify row-by-row which values belong to H1 vs H2 vs Views.
+
+CRITICAL COLUMN ALIGNMENT RULES:
+- Read EACH ROW of the table independently. Every row has exactly 4 columns.
+- Column 1 = "Social Care Provision" → Provision
+- Column 2 = "By Whom" → By_Whom
+- Column 3 = "Frequency" → Frequency
+- Column 4 = "Which Need Does This Provision Meet" → Met_Need
+- All four output arrays (Provision, By_Whom, Frequency, Met_Need) MUST have the SAME length.
+- Array index 0 = table row 1, index 1 = table row 2, etc. across ALL four arrays.
+- Each column in the table is a SEPARATE field. Do NOT merge column values.
+
+ROW COUNTING — USE THE STRUCTURED TABLE SUPPLEMENT (MANDATORY):
+- At the end of the document text there is a "STRUCTURED TABLE DATA" section.
+- This section shows every table with numbered rows and column labels separated by |.
+- For H1: count ONLY the data rows between the H1 column-header row and the H2 header row.
+- For H2: count ONLY the data rows after the H2 column-header row until the table ends.
+- The number of rows you count in the structured supplement = the EXACT length of ALL four arrays.
+- If the structured supplement shows 25 data rows for H1, then Provision, By_Whom, Frequency and Met_Need must each have exactly 25 entries.
+- If the structured supplement shows 26 data rows for H2, then all four H2 arrays must have exactly 26 entries.
+- VERIFY: After extraction, check that len(Provision) == len(By_Whom) == len(Frequency) == len(Met_Need) for both H1 and H2. If they differ, you made an error.
+
+MULTI-LINE CELL HANDLING (CRITICAL):
+- Some table cells contain MULTIPLE lines of text (e.g. the Met_Need column may have 2 paragraphs per cell).
+- In the flat document text, these multi-line cells look like separate lines — but they are ONE cell.
+- Use the STRUCTURED TABLE DATA supplement to see the actual cell boundaries. Each "Row N:" entry shows the COMPLETE cell text for all 4 columns.
+- Do NOT split a multi-line cell into multiple array entries. Join the lines within one cell with \n into a SINGLE string.
+- Do NOT treat the second line of a Met_Need cell as a new Provision entry.
+
+EMPTY CELL HANDLING (CRITICAL):
+- If a table cell is EMPTY or BLANK, output null at that index. Do NOT skip it.
+- Do NOT shift values from subsequent rows to fill an empty cell.
+- Do NOT collapse rows by removing nulls — every row must be represented.
+- Example: If row 1 has By_Whom="Teacher" and row 2 has By_Whom="" (empty),
+  the By_Whom array must be ["Teacher", null, ...] — NOT ["Teacher", <row 3 value>, ...].
+
+NEVER DO THIS:
+- Moving a value from row N+1 into row N because row N's cell was empty.
+- Omitting a row because some of its cells are empty.
+- Having arrays of different lengths.
+- Treating the second line of a multi-line cell as a new row.
+- Having Provision with more entries than By_Whom or Frequency.
+- INVENTING or FABRICATING rows that do not exist in the document or STRUCTURED TABLE DATA.
+- Appending text from other parts of the document (e.g. Needs, Views) into a Provision cell.
+
+CRITICAL — NO HALLUCINATED ROWS:
+- Extract ONLY the rows that exist in the STRUCTURED TABLE DATA supplement.
+- If the structured supplement shows N data rows for H1, you MUST output exactly N entries per array — no more.
+- Do NOT add extra rows or extra text that does not appear in the actual H1/H2 table.
+- If text appears elsewhere in the document but NOT in the H1/H2 table rows, it does NOT belong in the provision arrays.
+
+If a table row has text in the By_Whom column, it MUST appear in By_Whom — not in Provision.
+
+Tables may continue onto the next page without repeating the H1/H2 heading.
+If a row or continuation text belongs to the same H2 table on the following page, it MUST still be extracted into H2_Social_Care_Provision.
+Do NOT stop extraction at a page break if the table continues.
+
+Do NOT add numbering or bullet symbols to Provision, By_Whom, Frequency, or Met_Need values.
+Keep each cell's text as a plain paragraph. If a cell contains multiple paragraphs, join them into a single string using \n — but without any numbering or bullet prefixes.
+
+=============================
+ADVICE GIVER AND QUALITY ASSURED BY — MANDATORY EXTRACTION
+=============================
+
+The document is signed or authored by professionals. Their details typically appear at the very end of the document (last few lines), in a header/footer, or in a cover page.
+
+You MUST extract:
+- Advice_Giver: Name, Role, Date
+- Advice_Quality_Assured_By: Name, Role, Date
+- Preserve original date format exactly as written.
+
+For each, look for:
+• Name — the full name of the person (e.g. "Paul Dunn", "Dr Karen Bell", "Dr Leo Green", "Dr Karen Bell & Dr Leo Green"). Look near "Name:", "Signed by:", "Written by:", "Advice given by:", or a standalone name at the end of the document. If multiple names appear together (e.g. joined by "&" or "and"), extract them exactly as written including the connector.
+• Role — their professional role or job title (e.g. near "Role:", "Position:", "Designation:", or directly after the name)
+• Date — the date (e.g. near "Date:", "Date of advice:", or near the signature block)
+
+CRITICAL RULES:
+- These fields MUST NOT be null if a name, role, or date appears anywhere in the document's signature/author section.
+- Scan the ENTIRE document, especially the LAST 20 lines and any header/footer text.
+- If you find a person's name at the end of the document that is clearly the author/signer, extract it even if there is no explicit "Name:" label.
+- If any field cannot be found, set that specific field to null — but extract whichever fields ARE present.
+
+=============================
+URL / HYPERLINK HANDLING
+=============================
+
+URLs and hyperlinks already appear inline in the document text — preserve them exactly as they appear.
+Do NOT remove, reformat, or duplicate URLs.
+If a "HYPERLINKS IN DOCUMENT" section appears at the end, replace hyperlink display text with "display text (URL)" to preserve the actual URL.
+
+=============================
+FINAL OUTPUT RULES
+=============================
+
+- Return ONLY valid JSON
+- No explanations, no markdown, no extra text
+- ALL fields with data in the document MUST be populated
+- Do NOT return null for fields that have data in the document
+
+=============================
+Schema:
+{schema}
+
+=============================
+Document Text:
+{document_text}

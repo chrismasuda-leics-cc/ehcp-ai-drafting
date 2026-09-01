@@ -1,0 +1,85 @@
+Extract structured information from the EHCP Health Advice document.
+
+Return ONLY valid JSON matching the schema.
+
+=============================
+CRITICAL: COMPLETENESS
+=============================
+
+You MUST extract ALL data from the document for every schema field.
+Do NOT skip, truncate, or summarise any content.
+Every line and paragraph that belongs to a schema field MUST appear in the output.
+
+=============================
+GENERAL RULES
+=============================
+
+- Use the exact schema keys. Do NOT create new keys.
+- If information is missing, return null.
+- Preserve the original wording from the document exactly as written.
+- EMPTY / BLANK TEMPLATE DETECTION: If a field contains ONLY its heading label
+  (e.g. "Health Needs" under the Health_Needs field, "Outcomes" under the Outcomes
+  field, "Medical History" under the Medical_History field, "Name:" under Name,
+  "DOB:" under DOB, etc.) with NO actual patient data, return null for that field.
+  Column headers and form labels are NOT data — they are template placeholders.
+- Do NOT summarise, rewrite, or paraphrase any text.
+- Do NOT combine separate items into one string unless they are a single paragraph.
+- Remove bullet symbols (•, -, o) but keep the text.
+- Keep all dates exactly as written in the document.
+
+=============================
+CHILD DETAILS
+=============================
+
+Extract all child details into the Child_Details object:
+- Name, DOB, NHS_Number, Sex, Address, Postcode, Home_Language
+- These are typically found at the top of the document or in a header section.
+- If Address and Postcode appear together on one line, split them into separate fields.
+- NHS_Number: Copy the EXACT digits from the document character by character. Do NOT guess or approximate. If the NHS number appears multiple times, use the one that appears most frequently. Double-check every digit matches the source text.
+
+=============================
+MEDICAL HISTORY, HEALTH NEEDS, OUTCOMES, HEALTH PROVISION
+=============================
+
+These fields may contain multi-line text with contributions from different services.
+- Include ALL lines of text under each heading.
+- If multiple services contribute to the same field, include ALL of them separated by newlines.
+- Preserve the service name prefix (e.g. "LLR CAMHS:", "Leicestershire Community Paediatrics:") exactly as written.
+- Do NOT drop any contributor's information.
+- For Health_Provision, extract ONLY the actual provision/recommendation text.
+- Do NOT pull in footer/admin text such as page numbers, copies-to blocks, signature blocks, child detail headers, or "Please see attached contributions from" lines.
+- Lines that say "Current clinical information to be shared with Local Authority (see attached report)" or similar referral/admin language are NOT actual health provision. They are administrative instructions. Do NOT extract them into Health_Provision.
+- If the ONLY text under Health Provision is referral/admin text like the above, return null for Health_Provision.
+- If a footer or admin block starts after the Health_Provision content, STOP extraction for Health_Provision at that point.
+
+=============================
+ADVICE DATE
+=============================
+
+Extract the date of the advice letter, typically found near the top of the document.
+Preserve the original date format exactly as written.
+
+=============================
+URL / HYPERLINK HANDLING
+=============================
+
+URLs and hyperlinks already appear inline in the document text — preserve them exactly as they appear.
+Do NOT remove, reformat, or duplicate URLs.
+If a "HYPERLINKS IN DOCUMENT" section appears at the end, replace hyperlink display text with "display text (URL)" to preserve the actual URL.
+
+=============================
+FINAL OUTPUT RULES
+=============================
+
+- Return ONLY valid JSON
+- No explanations, no markdown, no extra text
+- ALL fields with data in the document MUST be populated
+- Do NOT return null for fields that have data in the document
+
+=============================
+Schema:
+{schema}
+
+=============================
+Document Text:
+{document_text}

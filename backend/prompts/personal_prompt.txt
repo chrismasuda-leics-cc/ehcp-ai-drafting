@@ -1,0 +1,40 @@
+Extract structured personal details from the EHCP document.
+
+Return ONLY valid JSON.
+
+Rules:
+- Use EXACT schema keys
+- Do NOT create new keys
+- If a value is missing return null
+- EMPTY / BLANK TEMPLATE DETECTION: If a field contains ONLY its heading label
+  or form placeholder (e.g. "Name" under the name field, "Date of birth" under
+  date_of_birth, "Address" under address, etc.) with NO actual person data,
+  return null for that field. Form labels and column headers are NOT data.
+- Preserve the exact value from the document
+- If a value is split across multiple lines (for example emails, addresses, numbers), JOIN the lines to reconstruct the correct value
+- Do NOT insert extra spaces when joining split text
+- Remove line breaks inside values
+- Interpret all date inputs as day-month-year (d-m-y), regardless of separator or year length (e.g. dd/mm/yyyy, dd.mm.yy, dd-mm-yy).
+- For `date_of_birth`, the JSON output must be in `dd/mm/yyyy` format
+- For `date_of_move_in`, the JSON output must be in `dd/mm/yyyy` format
+- If the source document already shows `date_of_birth` in `dd/mm/yyyy`, keep it as it is
+- If the source document already shows `date_of_move_in` in `dd/mm/yyyy`, keep it as it is
+- If the source document shows `date_of_birth` in another clear date format, convert it to `dd/mm/yyyy`
+- If the source document shows `date_of_move_in` in another clear date format, convert it to `dd/mm/yyyy`
+- If the date is ambiguous or cannot be confidently converted, preserve the original extracted value
+- For `education_setting` and `gp_and_key_health_professional`, if the value continues across multiple lines, join each line using `, `
+- Example for `education_setting` or `gp_and_key_health_professional`:
+  `Highfields on Soar Primary School Back Street\nStreetHighfields On Soar\nNottinghamshireLE20 5TB` → `Highfields on Soar Primary School Back Street, StreetHighfields On Soar, NottinghamshireLE20 5TB`
+- Example:
+  "abc@sky\n.com" → "abc@sky.com"
+  "abc@sky.co\nm" → "abc@sky.com"
+- Keep punctuation exactly as written
+- Do not summarise
+- URLs and hyperlinks already appear inline in the document text — preserve them exactly as they appear
+- Output must be pure JSON with no markdown or explanations
+
+Schema:
+{schema}
+
+Document Text:
+{document_text}

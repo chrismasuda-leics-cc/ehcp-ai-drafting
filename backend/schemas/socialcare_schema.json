@@ -1,0 +1,48 @@
+{
+    "Child_Details": {
+        "Name": null,
+        "Date_of_Birth": null,
+        "Address": null,
+        "Mosaic_ID": null,
+        "Status": null
+    },
+
+    "Child_Views": null,
+    "Parent_Carer_Views": null,
+
+    "Social_Care_Needs": {
+        "Strengths": null,
+        "Needs": null
+    },
+
+    "Outcomes": {
+        "Long_Term_Outcomes": null,
+        "Medium_Term_Outcomes": null
+    },
+
+    "H1_Social_Care_Provision": {
+        "Provision": null,
+        "By_Whom": null,
+        "Frequency": null,
+        "Met_Need": null
+    },
+
+    "H2_Social_Care_Provision": {
+        "Provision": null,
+        "By_Whom": null,
+        "Frequency": null,
+        "Met_Need": null
+    },
+
+    "Advice_Giver": {
+        "Name": null,
+        "Role": null,
+        "Date": null
+    },
+
+    "Advice_Quality_Assured_By": {
+        "Name": null,
+        "Role": null,
+        "Date": null
+    }
+}

@@ -1,0 +1,5 @@
+streamlit==1.55.0
+requests
+python-dotenv
+msal
+PyJWT

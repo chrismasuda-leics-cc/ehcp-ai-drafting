@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+python-multipart
+agent-framework[openai]
+python-dotenv
+python-docx
+openai
+azure-ai-documentintelligence
+azure-identity
+mammoth
+markdownify
+beautifulsoup4
+openpyxl
+azure-storage-blob
+PyMuPDF
+PyJWT[crypto]
+azure-cosmos

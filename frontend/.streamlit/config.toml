@@ -1,0 +1,16 @@
+[server]
+enableXsrfProtection = false
+enableCORS = false
+headless = true
+maxUploadSize = 200
+maxMessageSize = 200
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false
+
+[runner]
+fastReruns = false
+
+[theme]
+primaryColor = "#888888"
