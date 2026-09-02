@@ -17,6 +17,8 @@
     This is a ONE-TIME setup script. For subsequent code deployments, use
     build-push.ps1 and deploy-aca.ps1 instead.
 
+    Replace {org name prefix} with shortname of your org.
+
 .PARAMETER SubscriptionId
     Azure Subscription ID.
 
@@ -27,10 +29,10 @@
     Azure region (default: uksouth).
 
 .PARAMETER Prefix
-    Naming prefix for all resources (default: ehcp).
+    Naming prefix for all resources.
 
 .PARAMETER OpenAIModelName
-    OpenAI model to deploy (default: gpt-4o).
+    OpenAI model to deploy (default: gpt-5.2).
 
 .PARAMETER SkipInfra
     Skip infrastructure creation and only build + deploy apps.
@@ -52,7 +54,7 @@ param(
     [Parameter(Mandatory)][string]$SubscriptionId,
     [Parameter(Mandatory)][string]$ResourceGroup,
     [string]$Location        = "swedencentral",
-    [string]$Prefix          = "ehcp-new",
+    [string]$Prefix          = "ehcp-{org name prefix}",
     [string]$OpenAIModelName = "gpt-5.2",
     [switch]$SkipInfra
 )
