@@ -10,7 +10,7 @@ statutory EHCP DOCX template using a spreadsheet-driven field mapping. The resul
 that a human reviews and finalises — the system is a drafting assistant, **not** a decision maker.
 
 ---
-**NOTE on Location** :- This solution uses swedencentral as foundry resource region and Global standard deployment type which means data wil be stored in swedencentral but can be processed outside EU. Please choose the location carefully depending on your data residency and data processing requirements.
+**NOTE on Location** :- This solution uses swedencentral as AI resource region and Global standard deployment type which means data wil be stored in swedencentral but can be processed outside EU. Please choose the location carefully depending on your data residency and data processing requirements.
 
 **NOTE on Deployment scripts** :- Please try running solution and deployment scripts only in a sandbox/test env.**(Not for Production use)**. We are working on hardening the solution with best practices and making azure deployment as simple as possible and will notify you once the repo is updated.
 
