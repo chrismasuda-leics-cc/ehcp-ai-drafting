@@ -26,7 +26,7 @@
     Resource Group name to create/use.
 
 .PARAMETER Location
-    Azure region (default: uksouth).
+    Azure region (default: swedencentral).
 
 .PARAMETER Prefix
     Naming prefix for all resources.
