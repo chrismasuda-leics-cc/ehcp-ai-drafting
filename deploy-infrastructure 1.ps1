@@ -6,7 +6,7 @@
     Provisions ALL Azure resources from scratch and deploys the application:
       1. Resource Group
       2. Azure Container Registry (ACR)
-      3. Microsoft Foundry resource (with GPT deployment)
+      3. Azure OpenAI (with GPT deployment)
       4. Azure Document Intelligence
       5. Azure Storage Account + Blob Container
       6. Azure Cosmos DB (database + containers)
@@ -196,23 +196,12 @@ if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($foundryExists)) 
         --name $FOUNDRY_NAME `
         --resource-group $ResourceGroup `
         --location $Location `
-        --kind AIServices `
-        --sku S0 `
-        --allow-project-management true `
+        --kind OpenAI `
+        --sku S0 `        
         --custom-domain $FOUNDRY_NAME `
         -o none
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Done "Foundry resource created"
-
-    az cognitiveservices account project create `
-    --name $FOUNDRY_NAME `
-    --resource-group $ResourceGroup `
-    --location $Location `
-    --project-name "ehcpproject{org name prefix}" `
-    --display-name "This is the foundry project for ehcp drafting" `
-    --description "This is the foundry project for ehcp drafting" `
-    -o none
-    Write-Done "Foundry project created"
+    Write-Done "Open AI resource created"   
 }
 
 Write-SubStep "Deploying model: $OpenAIModelName -> $OPENAI_DEPLOYMENT"
