@@ -203,6 +203,15 @@ if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($foundryExists)) 
         -o none
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Done "Foundry resource created"
+
+    az cognitiveservices account project create `
+    --name $FOUNDRY_NAME `
+    --resource-group $ResourceGroup `
+    --location $Location `
+    --project-name "ehcpproject{org name prefix}" `
+    --display-name "This is the foundry project for ehcp drafting" `
+    --description "This is the foundry project for ehcp drafting" `
+    -o none
 }
 
 Write-SubStep "Deploying model: $OpenAIModelName -> $OPENAI_DEPLOYMENT"
@@ -213,7 +222,7 @@ az cognitiveservices account deployment create `
     --model-name $OpenAIModelName `
     --model-version "2025-12-11" `
     --model-format OpenAI `
-    --sku-capacity 80 `
+    --sku-capacity 20 `
     --sku-name GlobalStandard `
     -o none
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
