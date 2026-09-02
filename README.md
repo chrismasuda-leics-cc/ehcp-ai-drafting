@@ -12,7 +12,7 @@ that a human reviews and finalises — the system is a drafting assistant, **not
 ---
 **NOTE on Location** :- This solution uses swedencentral as foundry resource region and Global standard deployment type which means data wil be stored in swedencentral but can be processed outside EU. Please choose the location carefully depending on your data residency requirements.
 
-**NOTE on Deployment scripts** :- Please try running solution and deployment scripts only in a sandbox/test env.(Not for Production use). We are working on making solution hardening and deployment as simple as possible and will notify you once the repo get updates.
+**NOTE on Deployment scripts** :- Please try running solution and deployment scripts only in a sandbox/test env.**(Not for Production use)**. We are working on making solution hardening and deployment as simple as possible and will notify you once the repo get updates.
 
 ## Table of contents
 
