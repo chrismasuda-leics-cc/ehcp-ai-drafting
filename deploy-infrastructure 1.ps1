@@ -212,6 +212,7 @@ if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($foundryExists)) 
     --display-name "This is the foundry project for ehcp drafting" `
     --description "This is the foundry project for ehcp drafting" `
     -o none
+    Write-Done "Foundry project created"
 }
 
 Write-SubStep "Deploying model: $OpenAIModelName -> $OPENAI_DEPLOYMENT"
