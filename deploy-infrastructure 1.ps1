@@ -39,13 +39,13 @@
 
 .EXAMPLE
     .\deploy-infrastructure.ps1 `
-        -SubscriptionId "70195374-ae10-4ee7-a46d-67b8fd22d38c" `
+        -SubscriptionId "your subscription id" `
         -ResourceGroup  "rg-ehcpdrafting-{org name prefix}" `
         -Location       "swedencentral" `
         -Prefix         "ehcp{org name prefix}"
 
     .\deploy-infrastructure.ps1 `
-        -SubscriptionId "70195374-ae10-4ee7-a46d-67b8fd22d38c" `
+        -SubscriptionId "your subscription id" `
         -ResourceGroup  "rg-ehcpdrafting-{org name prefix}" `
         -SkipInfra
 #>
