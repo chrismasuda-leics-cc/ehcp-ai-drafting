@@ -462,8 +462,7 @@ or model changes. No real personal data is included.
   tenant and region that meet your organisation's data-residency and DPIA requirements, restrict
   network access, and set retention/lifecycle policies on the blob container and Cosmos DB
   containers.
-- **Secrets.** No secrets are committed. Keys are passed as Container App secrets, and managed
-  identity removes them entirely. Prefer `USE_MANAGED_IDENTITY=true` in production.
+- **Secrets.** No secrets are committed. Keys are passed as Container App secrets
 - **Authentication.** Enable `AUTH_ENABLED=true` in any non-local environment so the API validates
   Entra ID JWTs (signature, audience, issuer and expiry).
 - **Network isolation.** The backend is deployed with internal-only ingress; only the frontend is
