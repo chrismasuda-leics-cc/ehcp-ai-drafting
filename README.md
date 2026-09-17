@@ -16,6 +16,7 @@ that a human reviews and finalises — the system is a drafting assistant, **not
 
 ## Table of contents
 
+- [Responsible AI](#responsible-ai)
 - [Key capabilities](#key-capabilities)
 - [Technical architecture](#technical-architecture)
 - [Azure components used](#azure-components-used)
@@ -28,6 +29,110 @@ that a human reviews and finalises — the system is a drafting assistant, **not
 - [Test cases](#test-cases)
 - [Security, privacy and responsible AI](#security-privacy-and-responsible-ai)
 - [Troubleshooting](#troubleshooting)
+
+---
+
+## Responsible AI
+
+This solution is built with Responsible AI (RAI) in mind and contains checks to make sure a human
+confirms that the draft is AI generated. Each customer must also complete their own
+deployment-specific RAI and privacy assessment.
+
+### Intended use
+
+- **What it is.** A drafting assistant that turns professional advice documents (Personal Details,
+  Education, Health, Social Care) into a **draft** EHCP document for a qualified case officer to
+  review, edit and finalise.
+- **Intended users.** Trained local-authority case officers and EHCP practitioners operating within
+  their organisation's statutory process.
+- **What it is not.** It is **not** a decision maker. It does not determine eligibility, provision,
+  placement or any other statutory outcome, and it must not be used to automate a decision about a
+  child or young person.
+
+### Limitations
+
+- Output quality depends on the quality, completeness and legibility of the uploaded advice
+  documents; missing source content cannot be inferred.
+- Generative models can produce inaccurate, incomplete or non-faithful text (including omissions or
+  plausible-sounding content not present in the source).
+- Extraction and document typing use heuristics and schemas tuned to the supplied templates;
+  significantly different local forms may reduce accuracy.
+- Only DOCX and PDF inputs are supported, and scanned/handwritten content depends on Document
+  Intelligence OCR quality.
+- The solution is currently English-language and UK EHCP-process specific.
+
+### Risks and mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Over-reliance on AI output ("automation bias") | Mandatory in-product confirmation that the user is responsible for verifying AI-generated content; the output is always labelled a draft |
+| Inaccurate or hallucinated content | LLM validator scores extraction accuracy, a deterministic quality checker re-checks fields and completeness, and writer validation compares the filled DOCX against the source JSONs and mapping workbook |
+| Unfair or inconsistent outcomes for individuals | No decisioning logic; a qualified professional makes every judgement, and reference test cases can be used to compare behaviour across case types |
+| Exposure of special-category personal data | Managed-identity-first keyless access, per-session isolation, scoped downloads, optional Entra ID authentication, internal-only backend ingress, and customer-set retention policies |
+| Lack of traceability | Per-action and per-case audit records (including token usage, accuracy and completeness) written to Cosmos DB |
+| Model or prompt drift after changes | Re-run the supplied test cases and re-benchmark accuracy/completeness after prompt, schema or model changes |
+
+### Testing evidence
+
+- `Test Cases/` contains fully synthetic simple and complex cases with reference outputs; no real
+  personal data is included. See [Test cases](#test-cases).
+- `tests/` contains automated tests, including a Playwright end-to-end test that exercises the full
+  upload → extract → validate → write flow (see
+  [Run the local Playwright end-to-end test](#4-run-the-local-playwright-end-to-end-test)).
+- Every run produces accuracy and completeness scores plus intermediate artefacts, which can be
+  retained as evaluation evidence for a deployment.
+- Customers should re-run these tests against their own representative (synthetic) documents before
+  go-live and after any material change.
+
+### Human oversight
+
+- The output is a draft only; a qualified professional must review, edit and approve every plan
+  before it is issued.
+- The UI requires the user to explicitly confirm that they are responsible for verifying the
+  AI-generated content, and this confirmation is recorded in the audit log.
+- Validation scores and per-field completeness are surfaced so reviewers can prioritise the areas
+  most likely to need correction.
+
+### Security, privacy and data protection
+
+- See [Security & Privacy](#security--privacy) for the technical controls implemented in this
+  solution.
+- Customers are responsible for their own data protection posture, including data residency,
+  retention and lawful basis. See [Customer responsibilities](#customer-responsibilities).
+
+### Monitoring
+
+- Enable `AUDIT_LOG_ENABLED=true` so user actions and consolidated per-case job records are
+  persisted to Cosmos DB.
+- Monitor accuracy, completeness, token usage, error rates and rate-limit (429) responses over time,
+  and investigate sustained degradation as a potential quality or drift issue.
+- Establish a route for reviewers to report poor-quality drafts, and an incident process for
+  handling harmful or incorrect output.
+
+### Change-impact reviews
+
+- Each feature change should be triaged for RAI impact, with material changes triggering an updated
+  evaluation.
+- Treat changes to prompts, JSON schemas, the field-mapping workbook, model deployments or model
+  versions, validation thresholds, and the human-confirmation flow as material by default.
+- For material changes, re-run the test cases, compare accuracy and completeness against the
+  previous baseline, record the results, and obtain the appropriate internal approval before
+  release.
+
+### Customer responsibilities
+
+Each customer must carry out their own local assessment, because their data, legal basis, users,
+decisions and risk profile will differ. As a minimum this includes:
+
+- A **DPIA/PIA** covering the special-category personal data of children processed by the solution.
+- **Governance approvals** from the relevant information governance, clinical/professional and
+  legal stakeholders.
+- **Transparency notices** for data subjects and clear disclosure to staff that drafts are
+  AI-generated.
+- **Monitoring** of accuracy, completeness and usage, with defined thresholds and review cadence.
+- **Incident processes** for AI-related quality, safety, security and privacy issues.
+- A deployment-specific **RAI assessment** covering the region, model deployment type, user base and
+  intended workflow.
 
 ---
 
