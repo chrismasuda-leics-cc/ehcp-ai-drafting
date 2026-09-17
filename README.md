@@ -68,7 +68,6 @@ deployment-specific RAI and privacy assessment.
 | Over-reliance on AI output ("automation bias") | Mandatory in-product confirmation that the user is responsible for verifying AI-generated content; the output is always labelled a draft |
 | Inaccurate or hallucinated content | LLM validator scores extraction accuracy, a deterministic quality checker re-checks fields and completeness, and writer validation compares the filled DOCX against the source JSONs and mapping workbook |
 | Unfair or inconsistent outcomes for individuals | No decisioning logic; a qualified professional makes every judgement, and reference test cases can be used to compare behaviour across case types |
-| Exposure of special-category personal data | Managed-identity-first keyless access, per-session isolation, scoped downloads, optional Entra ID authentication, internal-only backend ingress, and customer-set retention policies |
 | Lack of traceability | Per-action and per-case audit records (including token usage, accuracy and completeness) written to Cosmos DB |
 | Model or prompt drift after changes | Re-run the supplied test cases and re-benchmark accuracy/completeness after prompt, schema or model changes |
 
