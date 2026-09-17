@@ -76,13 +76,6 @@ deployment-specific RAI and privacy assessment.
 
 - `Test Cases/` contains fully synthetic simple and complex cases with reference outputs; no real
   personal data is included. See [Test cases](#test-cases).
-- `tests/` contains automated tests, including a Playwright end-to-end test that exercises the full
-  upload → extract → validate → write flow (see
-  [Run the local Playwright end-to-end test](#4-run-the-local-playwright-end-to-end-test)).
-- Every run produces accuracy and completeness scores plus intermediate artefacts, which can be
-  retained as evaluation evidence for a deployment.
-- Customers should re-run these tests against their own representative (synthetic) documents before
-  go-live and after any material change.
 
 ### Human oversight
 
@@ -95,8 +88,6 @@ deployment-specific RAI and privacy assessment.
 
 ### Security, privacy and data protection
 
-- See [Security & Privacy](#security--privacy) for the technical controls implemented in this
-  solution.
 - Customers are responsible for their own data protection posture, including data residency,
   retention and lawful basis. See [Customer responsibilities](#customer-responsibilities).
 
